@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Election Results</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        :root {
+            --primary-color: #00f2fe;
+            --secondary-color: #4facfe;
+            --background-dark: #0f0c29;
+            --text-light: #e6e6e6;
+            --card-background: rgba(48, 43, 99, 0.2);
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+            overflow-x: hidden;
+            color: var(--text-light);
+            perspective: 1500px;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(79, 172, 254, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.3s ease;
+        }
+
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .results-header {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            transform: translateZ(40px);
+        }
+
+        .candidate-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .candidate-result-card {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .candidate-result-card:hover {
+            transform: scale(1.05) translateZ(30px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .candidate-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid var(--primary-color);
+        }
+
+        .vote-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .vote-bar-fill {
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            transition: width 1.5s ease-in-out;
+        }
+
+        .winner-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: gold;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .total-votes {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+        }
+
+        .pie-chart-container {
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        @media (max-width: 768px) {
+            .candidate-results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    
+    <div class="results-container">
+        <div class="results-header">
+            <h1 style="font-family: 'Orbitron', sans-serif; color: var(--primary-color);">Election Results</h1>
+            <p>Official vote count for the national election</p>
+        </div>
+
+        <div class="candidate-results" id="candidateResults">
+            <!-- Candidate results will be dynamically inserted here -->
+        </div>
+
+        <div class="total-votes">
+            <h2>Total Voter Turnout</h2>
+            <p id="totalVoterTurnout">Loading...</p>
+        </div>
+
+        <div class="pie-chart-container">
+            <canvas id="votePieChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script>
+        // Candidate Results Data
+        const candidateResults = [
+            {
+                id: 1,
+                name: "Alice Johnson",
+                party: "Progressive Alliance",
+                image: "/api/placeholder/150/150",
+                votes: 1250000,
+                percentage: 0
+            },
+            {
+                id: 2,
+                name: "Bob Martinez",
+                party: "Economic Renewal Party",
+                image: "/api/placeholder/150/150",
+                votes: 1100000,
+                percentage: 0
+            },
+            {
+                id: 3,
+                name: "Charlie Wong",
+                party: "Green Future Movement",
+                image: "/api/placeholder/150/150",
+                votes: 650000,
+                percentage: 0
+            }
+        ];
+
+        // Calculate total votes and percentages
+        function calculateResults() {
+            const totalVotes = candidateResults.reduce((sum, candidate) => sum + candidate.votes, 0);
+            
+            candidateResults.forEach(candidate => {
+                candidate.percentage = ((candidate.votes / totalVotes) * 100).toFixed(2);
+            });
+
+            // Sort candidates by votes (descending)
+            candidateResults.sort((a, b) => b.votes - a.votes);
+
+            document.getElementById('totalVoterTurnout').textContent = 
+                `${totalVotes.toLocaleString()} votes cast`;
+
+            return totalVotes;
+        }
+
+        // Render Candidate Results
+        function renderCandidateResults() {
+            const container = document.getElementById('candidateResults');
+            container.innerHTML = '';
+
+            candidateResults.forEach((candidate, index) => {
+                const card = document.createElement('div');
+                card.classList.add('candidate-result-card');
+                card.innerHTML = `
+                    ${index === 0 ? '<div class="winner-badge">Winner</div>' : ''}
+                    <img src="${candidate.image}" alt="${candidate.name}" class="candidate-image">
+                    <h3>${candidate.name}</h3>
+                    <p>${candidate.party}</p>
+                    <div class="vote-details">
+                        <strong>${candidate.votes.toLocaleString()} Votes</strong>
+                        <p>${candidate.percentage}% of total votes</p>
+                    </div>
+                    <div class="vote-bar">
+                        <div class="vote-bar-fill" style="width: ${candidate.percentage}%"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Show winner badge
+            const winnerBadges = document.querySelectorAll('.winner-badge');
+            winnerBadges.forEach(badge => {
+                badge.style.display = 'block';
+            });
+        }
+
+        // Create Pie Chart
+        function createPieChart() {
+            const ctx = document.getElementById('votePieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: candidateResults.map(c => c.name),
+                    datasets: [{
+                        data: candidateResults.map(c => c.votes),
+                        backgroundColor: [
+                            'rgba(0, 242, 254, 0.6)',
+                            'rgba(79, 172, 254, 0.6)',
+                            'rgba(48, 43, 99, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = `${e.clientX}px`;
+            cursor.style.top = `${e.clientY}px`;
+            
+            cursorFollower.style.left = `${e.clientX}px`;
+            cursorFollower.style.top = `${e.clientY}px`;
+        });
+
+        // Initialization
+        function init() {
+            calculateResults();
+            renderCandidateResults();
+            createPieChart();
+        }
+
+        // Run initialization
+        init();
+    </script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Authentication</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        :root {
+            --primary-color: #00f2fe;
+            --secondary-color: #4facfe;
+            --background-dark: #0f0c29;
+            --text-light: #e6e6e6;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+            overflow: hidden;
+            color: var(--text-light);
+            perspective: 1500px;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(79, 172, 254, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.3s ease;
+        }
+
+        .blockchain-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .blockchain-block {
+            position: absolute;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            transform-style: preserve-3d;
+            animation: blockFloat 10s infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes blockFloat {
+            0%, 100% { transform: translateY(0) rotateX(45deg) rotateY(45deg); }
+            50% { transform: translateY(-100px) rotateX(55deg) rotateY(55deg); }
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transform-style: preserve-3d;
+        }
+
+        .login-panel {
+            width: 500px;
+            background: rgba(48, 43, 99, 0.2);
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 50px;
+            text-align: center;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg, 
+                transparent, 
+                var(--primary-color), 
+                var(--secondary-color)
+            );
+            transform: rotate(-45deg);
+            opacity: 0.1;
+            transition: all 0.6s ease;
+        }
+
+        .login-panel:hover::before {
+            opacity: 0.3;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+            transform: translateZ(50px);
+        }
+
+        .login-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: var(--primary-color);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            position: relative;
+            transform: translateZ(30px);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 16px;
+            transition: all 0.4s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+        }
+
+        .login-btn {
+            margin-top: 20px;
+            padding: 15px 35px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: var(--background-dark);
+            border: none;
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateZ(40px);
+        }
+
+        .login-btn:hover {
+            transform: translateZ(40px) scale(1.1) rotateX(10deg);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .two-factor {
+            margin-top: 20px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            transform: translateZ(20px);
+        }
+
+        @media (max-width: 768px) {
+            .login-panel {
+                width: 90%;
+                max-width: 400px;
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    <div class="blockchain-background" id="blockchainBackground"></div>
+    
+    <div class="login-container">
+        <div class="login-panel">
+            <div class="login-header">
+                <h1>User Console</h1>
+            </div>
+            
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input 
+                        type="text" 
+                        id="username"
+                        placeholder="Username" 
+                        required 
+                        autocomplete="username"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password"
+                        placeholder="Password" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <i class="fas fa-key"></i>
+                    <input 
+                        type="text" 
+                        id="2fa"
+                        placeholder="Two-Factor Code" 
+                        required 
+                        autocomplete="off"
+                    >
+                </div>
+                
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+            
+            <div class="two-factor">
+                Secure Login with Multi-Factor Authentication
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createBlockchainBackground() {
+            const background = document.getElementById('blockchainBackground');
+            const blockCount = 80;
+
+            for (let i = 0; i < blockCount; i++) {
+                const block = document.createElement('div');
+                block.classList.add('blockchain-block');
+                
+                block.style.width = `${Math.random() * 80 + 20}px`;
+                block.style.height = `${Math.random() * 80 + 20}px`;
+                block.style.left = `${Math.random() * 100}%`;
+                block.style.top = `${Math.random() * 100}%`;
+                block.style.opacity = Math.random() * 0.5;
+                block.style.animationDuration = `${Math.random() * 25 + 15}s`;
+                block.style.animationDelay = `${Math.random() * 10}s`;
+
+                background.appendChild(block);
+            }
+        }
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = `${e.clientX}px`;
+            cursor.style.top = `${e.clientY}px`;
+            
+            cursorFollower.style.left = `${e.clientX}px`;
+            cursorFollower.style.top = `${e.clientY}px`;
+        });
+
+        document.querySelectorAll('input, .login-btn').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+                cursorFollower.style.transform = 'translate(-50%, -50%) scale(3)';
+            });
+
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                cursorFollower.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+        });
+
+        // Login Form Submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const twoFactor = document.getElementById('2fa').value;
+
+            // Here you would typically send the login credentials to a backend server
+            alert(`Login Attempt:\nUsername: ${username}\nTwo-Factor Code Entered: ${twoFactor.replace(/./g, '*')}`);
+            
+            // In a real application, you would:
+            // 1. Send credentials to server via AJAX/fetch
+            // 2. Handle authentication response
+            // 3. Redirect or show error messages accordingly
+        });
+
+        createBlockchainBackground();
+    </script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</body>
+</html>

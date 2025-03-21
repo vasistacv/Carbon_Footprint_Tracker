@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <style>
+        /* Body and background image */
+        body {
+            font-family: "Arial", sans-serif;
+            background: url("https://assets-eu-01.kc-usercontent.com/77bbf83a-1306-0152-fea5-3b5eaf937634/3f607a5b-f54a-403d-a53c-6f7280786ab9/GettyImages-1441429474%20-cmp.jpg") no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #fff;
+        }
+
+        /* Welcome message */
+        h1 {
+            font-size: 2em;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+            position: absolute;
+            top: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+        }
+
+        /* Container for login form */
+        .container {
+            width: 500px;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+        }
+
+        /* Form styling */
+        form {
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        input {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: none;
+            padding: 15px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 5px;
+            color: #fff;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: #fff;
+        }
+
+        button {
+            border: 0;
+            outline: 0;
+            background-color: rgba(76, 175, 80, 0.8);
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 16px;
+            margin-top: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: rgba(76, 175, 80, 1);
+        }
+
+        a {
+            color: #fff;
+            text-decoration: underline;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Carbon Footprint Tracker</h1>
+    <div class="container">
+        <form action="{{ url_for('login') }}" method="POST">
+            <h2>Login to Your Account</h2>
+            <input type="text" name="username" placeholder="Username" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+            <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
+        </form>
+    </div>
+    <script>
+        <script>
+    // Mock user database (in a real application, this would be server-side)
+   
+
+    // EcoSystemBackground class for animated background
+    class EcoSystemBackground {
+        constructor(canvasId) {
+            this.canvas = document.getElementById(canvasId);
+            this.renderer = new THREE.WebGLRenderer({ 
+                canvas: this.canvas, 
+                antialias: true, 
+                alpha: true 
+            });
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            this.particles = [];
+            this.setup();
+        }
+
+        setup() {
+            // Renderer setup
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Create gradient background
+            const backgroundGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+            const backgroundMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float time;
+                    varying vec2 vUv;
+                    void main() {
+                        vec3 greenColor1 = vec3(0.2, 0.5, 0.2);
+                        vec3 greenColor2 = vec3(0.1, 0.3, 0.1);
+                        vec3 color = mix(greenColor1, greenColor2, vUv.y + sin(time * 0.1) * 0.1);
+                        gl_FragColor = vec4(color, 1.0);
+                    }
+                `
+            });
+            const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+            backgroundMesh.material.side = THREE.BackSide;
+            this.scene.add(backgroundMesh);
+
+            // Camera positioning
+            this.camera.position.z = 1;
+
+            // Create eco particles
+            this.createEcoParticles(200);
+
+            // Lighting
+            this.setupLighting();
+
+            // Resize and animation
+            window.addEventListener('resize', this.onWindowResize.bind(this));
+            this.animate(backgroundMaterial);
+        }
+
+        createEcoParticles(count) {
+            const leafTextures = [
+                this.createLeafTexture('#2E8B57', '#1C5E33'),
+                this.createLeafTexture('#228B22', '#145A32'),
+                this.createLeafTexture('#3CB371', '#1E8449')
+            ];
+
+            for (let i = 0; i < count; i++) {
+                const geometry = new THREE.PlaneGeometry(0.05, 0.05);
+                const texture = leafTextures[Math.floor(Math.random() * leafTextures.length)];
+                const material = new THREE.MeshBasicMaterial({ 
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.7
+                });
+
+                const particle = new THREE.Mesh(geometry, material);
+
+                particle.position.set(
+                    Math.random() * 2 - 1,
+                    Math.random() * 2 - 1,
+                    Math.random() * -0.5
+                );
+
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.01,
+                        0
+                    ),
+                    rotationSpeed: Math.random() * 0.05
+                };
+
+                this.scene.add(particle);
+                this.particles.push(particle);
+            }
+        }
+
+        createLeafTexture(fillColor, strokeColor) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+
+            ctx.beginPath();
+            ctx.moveTo(50, 10);
+            ctx.quadraticCurveTo(80, 40, 50, 70);
+            ctx.quadraticCurveTo(20, 40, 50, 10);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            this.scene.add(ambientLight);
+        }
+
+        animate(backgroundMaterial) {
+            requestAnimationFrame(() => this.animate(backgroundMaterial));
+
+            // Animate background
+            backgroundMaterial.uniforms.time.value = performance.now() * 0.001;
+
+            // Animate particles
+            this.particles.forEach(particle => {
+                particle.position.add(particle.userData.velocity);
+                particle.rotation.z += particle.userData.rotationSpeed;
+
+                // Wrap around
+                if (Math.abs(particle.position.x) > 1) particle.position.x *= -1;
+                if (Math.abs(particle.position.y) > 1) particle.position.y *= -1;
+            });
+
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        onWindowResize() {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    }
+
+    // Login Form Handling
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+
+        // Reset previous validations and error messages
+        username.classList.remove('border-red-500');
+        password.classList.remove('border-red-500');
+        errorMessage.classList.add('hidden');
+        errorMessage.textContent = '';
+
+        // Validate input
+        let isValid = true;
+        if (username.value.trim().length < 3) {
+            username.classList.add('border-red-500');
+            isValid = false;
+        }
+
+        if (password.value.trim().length < 6) {
+            password.classList.add('border-red-500');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            errorMessage.textContent = 'Please correct the errors in the form';
+            errorMessage.classList.remove('hidden');
+            return;
+        }
+
+        // Enhanced Authentication Check
+        const user = users.find(u => 
+            u.username.toLowerCase() === username.value.toLowerCase() && 
+            u.password === password.value
+        );
+
+        if (user) {
+            // Store user information in localStorage
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Redirect to dashboard (simulated)
+            window.location.href = 'dashboard.html';
+        } else {
+            // Show authentication error
+            errorMessage.textContent = 'Invalid username or password';
+            errorMessage.classList.remove('hidden');
+            
+            // Add shake animation to login container
+            const loginContainer = document.querySelector('.glass-morphic');
+            loginContainer.classList.add('animate-shake');
+            
+            // Remove shake animation after it completes
+            setTimeout(() => {
+                loginContainer.classList.remove('animate-shake');
+            }, 500);
+        }
+    });
+
+    // Initialize eco system background on load
+    window.addEventListener('load', () => {
+        new EcoSystemBackground('background-canvas');
+    });
+    </script>
+    </script>
+</body>
+</html>

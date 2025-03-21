@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://img.freepik.com/free-photo/aerial-view-green-forest_144627-45271.jpg');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            width: 400px;
+            padding: 20px;
+            background-color: #9ec29cfd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .activity-input {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #9ec29cfd;
+            border-radius: 5px;
+            background-color: #9ec29cfd;
+        }
+
+        select, input[type="number"] {
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #9de4a0;
+            border-radius: 5px;
+            font-size: 16px;
+            width: calc(100% - 22px);
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: #0056b3;
+            outline: none;
+        }
+
+        button {
+            background-color: #90e285;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .remove-btn {
+            background-color: #dc3545;
+        }
+
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+
+        .input-container {
+            margin-top: 10px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background-color: #f0f8ff;
+        }
+
+        .instruction {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .unit-label {
+            font-size: 14px;
+            color: #666;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Carbon Footprint Tracker</h1>
+        <p class="instruction">Enter your activity data to calculate your carbon footprint.</p>
+        <form id="activityForm" onsubmit="return calculateFootprint(event)">
+            <div id="activityContainer">
+                <!-- Activities will be added here -->
+            </div>
+            <button type="submit" id="calculateBtn">Calculate Carbon Footprint</button>
+        </form>
+        <div class="result" id="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const activities = [
+            { id: 'meatConsumption', name: 'Meat Consumption', unit: 'kg', factor: 14.0 },
+            { id: 'electricity', name: 'Electricity Usage', unit: 'kWh', factor: 0.8 },
+            { id: 'driving', name: 'Car Driving', unit: 'km', factor: 0.2 },
+            { id: 'swimming', name: 'Swimming', unit: 'hours', factor: 2.0 },
+            { id: 'waterHeating', name: 'Water Heating', unit: 'liters', factor: 0.2 },
+            { id: 'airConditioning', name: 'Air Conditioning', unit: 'hours', factor: 0.7 },
+            { id: 'laundry', name: 'Laundry', unit: 'loads', factor: 2.4 },
+            { id: 'dishwasher', name: 'Dishwasher Usage', unit: 'loads', factor: 1.8 },
+            { id: 'publicTransport', name: 'Public Transport', unit: 'km', factor: 0.05 },
+            { id: 'flying', name: 'Air Travel', unit: 'km', factor: 0.25 },
+            { id: 'wasteDisposal', name: 'Waste Disposal', unit: 'kg', factor: 0.4 },
+            { id: 'paperUse', name: 'Paper Usage', unit: 'kg', factor: 3.0 },
+            { id: 'bottledWater', name: 'Bottled Water', unit: 'liters', factor: 0.08 },
+            { id: 'streaming', name: 'Video Streaming', unit: 'hours', factor: 0.08 },
+            { id: 'phoneCharging', name: 'Phone Charging', unit: 'hours', factor: 0.05 },
+            
+        ];
+
+        // Create activity inputs on load
+        window.onload = function() {
+            const container = document.getElementById('activityContainer');
+            activities.forEach(activity => {
+                const div = document.createElement('div');
+                div.className = 'activity-input';
+                div.innerHTML = `
+                    <label for="${activity.id}">${activity.name}</label>
+                    <div class="input-container">
+                        <input type="number" 
+                               id="${activity.id}" 
+                               min="0" 
+                               step="0.1" 
+                               placeholder="Enter value"
+                               required>
+                        <span class="unit-label">${activity.unit}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        };
+
+        function calculateFootprint(event) {
+            event.preventDefault();
+            let totalFootprint = 0;
+            let breakdown = [];
+
+            activities.forEach(activity => {
+                const input = document.getElementById(activity.id);
+                const value = parseFloat(input.value) || 0;
+                const footprint = value * activity.factor;
+                totalFootprint += footprint;
+                
+                if (value > 0) {
+                    breakdown.push({
+                        name: activity.name,
+                        footprint: footprint
+                    });
+                }
+            });
+
+            // Display results
+            const resultDiv = document.getElementById('result');
+            let resultHTML = `
+                <h3>Your Total Carbon Footprint: ${totalFootprint.toFixed(2)} kg CO2e</h3>
+                <h4>Breakdown by Activity:</h4>
+                <ul>
+            `;
+
+            breakdown.forEach(item => {
+                resultHTML += `<li>${item.name}: ${item.footprint.toFixed(2)} kg CO2e</li>`;
+            });
+
+            resultHTML += '</ul>';
+
+            // Add impact assessment
+            let impact = '';
+            if (totalFootprint < 50) impact = 'Low environmental impact';
+            else if (totalFootprint < 200) impact = 'Moderate environmental impact';
+            else if (totalFootprint < 500) impact = 'High environmental impact';
+            else impact = 'Very high environmental impact';
+
+            resultHTML += `<p><strong>Impact Assessment:</strong> ${impact}</p>`;
+
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+
+            return false;
+        }
+    </script>
+</body>
+</html>

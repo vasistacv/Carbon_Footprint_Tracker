@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        :root {
+            --primary-color: #00f2fe;
+            --secondary-color: #4facfe;
+            --background-dark: #0f0c29;
+            --text-light: #e6e6e6;
+            --card-background: rgba(48, 43, 99, 0.2);
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+            overflow-x: hidden;
+            color: var(--text-light);
+            perspective: 1500px;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(79, 172, 254, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transform: translateZ(50px);
+            border: 2px solid rgba(79, 172, 254, 0.2);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .welcome-banner {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            transform: translateZ(40px);
+        }
+
+        .voting-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .candidate-card {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+            transform-style: preserve-3d;
+        }
+
+        .candidate-card:hover {
+            transform: scale(1.05) translateZ(30px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .candidate-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid var(--primary-color);
+        }
+
+        .vote-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: var(--background-dark);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-top: 15px;
+        }
+
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .vote-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar-menu-item {
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-light);
+            transition: background 0.3s ease;
+        }
+
+        .sidebar-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-background);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px; font-family: 'Orbitron', sans-serif;">Dashboard</h2>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <i class="fas fa-vote-yea"></i> Voting
+                </li>
+                <li class="sidebar-menu-item">
+                    <i class="fas fa-chart-pie"></i> Results
+                </li>
+                <li class="sidebar-menu-item">
+                    <i class="fas fa-user-alt"></i> Profile
+                </li>
+                <li class="sidebar-menu-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div>
+                    <h1 style="font-family: 'Orbitron', sans-serif; margin-bottom: 10px;">Welcome, <span id="username">User</span></h1>
+                    <p>Cast your vote for the upcoming election</p>
+                </div>
+                <div id="userVoteStatus"></div>
+            </div>
+
+            <!-- Voting Section -->
+            <div class="voting-section" id="candidateContainer">
+                <!-- Candidates will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Voting Confirmation Modal -->
+    <div id="votingModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Your Vote</h2>
+            <p id="modalVoteConfirmation"></p>
+            <div>
+                <button id="confirmVoteBtn" class="vote-btn">Confirm</button>
+                <button id="cancelVoteBtn" class="vote-btn" style="background: gray; margin-left: 10px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Candidate Data
+        const candidates = [
+            {
+                id: 1,
+                name: "Alice Johnson",
+                party: "Progressive Alliance",
+                image: "/api/placeholder/150/150",
+                bio: "Advocate for education and technology reform"
+            },
+            {
+                id: 2,
+                name: "Bob Martinez",
+                party: "Economic Renewal Party",
+                image: "/api/placeholder/150/150",
+                bio: "Focus on economic growth and innovation"
+            },
+            {
+                id: 3,
+                name: "Charlie Wong",
+                party: "Green Future Movement",
+                image: "/api/placeholder/150/150",
+                bio: "Champion of environmental sustainability"
+            }
+        ];
+
+        // Voting State
+        let hasVoted = false;
+        let selectedCandidate = null;
+
+        // Username from login (simulated)
+        const username = localStorage.getItem('username') || 'User';
+        document.getElementById('username').textContent = username;
+
+        // Render Candidates
+        function renderCandidates() {
+            const container = document.getElementById('candidateContainer');
+            container.innerHTML = '';
+
+            candidates.forEach(candidate => {
+                const card = document.createElement('div');
+                card.classList.add('candidate-card');
+                card.innerHTML = `
+                  
+                    <h3>${candidate.name}</h3>
+                    <p>${candidate.party}</p>
+                    <p>${candidate.bio}</p>
+                    <button class="vote-btn" onclick="initiateVote(${candidate.id})" 
+                        ${hasVoted ? 'disabled' : ''}>
+                        ${hasVoted ? 'Already Voted' : 'Vote'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+
+            updateVoteStatus();
+        }
+
+        // Update Vote Status Display
+        function updateVoteStatus() {
+            const statusElement = document.getElementById('userVoteStatus');
+            statusElement.innerHTML = hasVoted 
+                ? `<span style="color: var(--primary-color);">✓ Voted</span>`
+                : `<span style="color: orange;">Voting Open</span>`;
+        }
+
+        // Vote Initiation
+        function initiateVote(candidateId) {
+            if (hasVoted) return;
+
+            selectedCandidate = candidates.find(c => c.id === candidateId);
+            
+            const modal = document.getElementById('votingModal');
+            const modalText = document.getElementById('modalVoteConfirmation');
+            
+            modalText.innerHTML = `
+                Are you sure you want to vote for<br>
+                <strong>${selectedCandidate.name}</strong> 
+                from the ${selectedCandidate.party}?
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // Confirm Vote
+        function confirmVote() {
+            if (!selectedCandidate) return;
+
+            // Simulate vote submission
+            hasVoted = true;
+            
+            // In a real system, you'd send this to a backend
+            console.log(`Vote cast for ${selectedCandidate.name}`);
+            
+            const modal = document.getElementById('votingModal');
+            modal.style.display = 'none';
+            
+            renderCandidates(); // Re-render to disable voting buttons
+        }
+
+        // Cancel Vote
+        function cancelVote() {
+            const modal = document.getElementById('votingModal');
+            modal.style.display = 'none';
+            selectedCandidate = null;
+        }
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = `${e.clientX}px`;
+            cursor.style.top = `${e.clientY}px`;
+            
+            cursorFollower.style.left = `${e.clientX}px`;
+            cursorFollower.style.top = `${e.clientY}px`;
+        });
+
+        document.querySelectorAll('button, .sidebar-menu-item').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+                cursorFollower.style.transform = 'translate(-50%, -50%) scale(3)';
+            });
+
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                cursorFollower.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+        });
+
+        // Event Listeners for Modal
+        document.getElementById('confirmVoteBtn').addEventListener('click', confirmVote);
+        document.getElementById('cancelVoteBtn').addEventListener('click', cancelVote);
+
+        // Initial Render
+        renderCandidates();
+    </script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</body>
+</html>
